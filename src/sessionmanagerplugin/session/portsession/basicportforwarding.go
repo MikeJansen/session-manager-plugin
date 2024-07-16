@@ -150,12 +150,16 @@ func (p *BasicPortForwarding) startLocalListener(log log.T, portNumber string) (
 		}
 		displayMessage = fmt.Sprintf("Unix socket %s opened for sessionId %s.", p.portParameters.LocalUnixSocket, p.sessionId)
 	default:
-		if listener, err = getNewListener("tcp", "localhost:"+portNumber); err != nil {
+		localAddress := os.Getenv("SSM_PORT_FORWARD_LOCAL_ADDRESS")
+		if localAddress == "" {
+			localAddress = "localhost"
+		}
+		if listener, err = getNewListener("tcp", localAddress+":"+portNumber); err != nil {
 			return
 		}
 		// get port number the TCP listener opened
 		p.portParameters.LocalPortNumber = strconv.Itoa(listener.Addr().(*net.TCPAddr).Port)
-		displayMessage = fmt.Sprintf("Port %s opened for sessionId %s.", p.portParameters.LocalPortNumber, p.sessionId)
+		displayMessage = fmt.Sprintf("Port %s:%s opened for sessionId %s.", localAddress, p.portParameters.LocalPortNumber, p.sessionId)
 	}
 
 	log.Info(displayMessage)

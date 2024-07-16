@@ -242,11 +242,15 @@ func (p *MuxPortForwarding) handleClientConnections(log log.T, ctx context.Conte
 		if p.portParameters.LocalPortNumber == "" {
 			localPortNumber = "0"
 		}
-		if listener, err = net.Listen("tcp", "localhost:"+localPortNumber); err != nil {
+		localAddress := os.Getenv("SSM_PORT_FORWARD_LOCAL_ADDRESS")
+		if localAddress == "" {
+			localAddress = "localhost"
+		}
+		if listener, err = net.Listen("tcp", localAddress+":"+localPortNumber); err != nil {
 			return err
 		}
 		p.portParameters.LocalPortNumber = strconv.Itoa(listener.Addr().(*net.TCPAddr).Port)
-		displayMsg = fmt.Sprintf("Port %s opened for sessionId %s.", p.portParameters.LocalPortNumber, p.sessionId)
+		displayMsg = fmt.Sprintf("Port %s:%s opened for sessionId %s.", localAddress, p.portParameters.LocalPortNumber, p.sessionId)
 	}
 
 	defer listener.Close()
